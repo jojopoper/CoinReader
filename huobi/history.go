@@ -36,7 +36,7 @@ func (ths *Reader) rdHistory() bool {
 		return true
 	}
 
-	_L.Error("Poloniex : Client get(history) has error :\n%+v", err)
+	_L.Error("Huobi : Client get(history) has error :\n%+v", err)
 	ths.historyClt = new(rhttp.CHttp)
 	ths.historyClt.SetDecodeFunc(ths.decodeHistory)
 	return false
