@@ -43,7 +43,7 @@ func (ths *Reader) rdHistory() bool {
 }
 
 func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
-	historys := new([]*HistoryItem)
+	historys := make([]*HistoryItem, 0)
 	err := json.Unmarshal(b, &historys)
 	if err != nil {
 		_L.Error("Aex : decodeHistory has error :\n%+v", err)
