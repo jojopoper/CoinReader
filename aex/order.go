@@ -2,7 +2,6 @@ package aex
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/jojopoper/CoinReader/common"
@@ -11,25 +10,7 @@ import (
 )
 
 func (ths *Reader) rdOrders() bool {
-	address := fmt.Sprintf("https://api.%s/depth.php?c=%s&mk_type=%s",
-		ths.Address, ths.Coin, ths.Monetary)
-	if ths.orderClt == nil {
-		ths.orderClt = new(rhttp.CHttp)
-		ths.orderClt.SetDecodeFunc(ths.decodeOrders)
-
-		if ths.Proxy.UseProxy() {
-			client, err := ths.orderClt.GetProxyClient(30, ths.Proxy.Address, ths.Proxy.Port)
-			if err != nil {
-				_L.Error("Aex : GetProxyClient(order) has error \n%+v", err)
-				return false
-			}
-			ths.orderClt.SetClient(client)
-		} else {
-			ths.orderClt.SetClient(ths.orderClt.GetClient(30))
-		}
-	}
-
-	ret, err := ths.orderClt.ClientGet(address, rhttp.ReturnCustomType)
+	ret, err := ths.orderClt.ClientGet(ths.orderAddr, rhttp.ReturnCustomType)
 	if err == nil {
 		ths.Datas.ClearOrderBook()
 		ths.addSellOrders(ret.(*OrderList), nil)
