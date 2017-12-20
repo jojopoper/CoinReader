@@ -37,14 +37,14 @@ func (ths *ReaderEx) initClient() {
 }
 
 func (ths *ReaderEx) initOrderParams() {
-	ths.orderAddr = fmt.Sprintf("https://api.%s/depth.php?c=%s&mk_type=%s",
+	ths.OrderAddr = fmt.Sprintf("https://api.%s/depth.php?c=%s&mk_type=%s",
 		ths.Address, ths.Coin, ths.Monetary)
 	ths.orderClt = new(rhttp.CHttp)
 	ths.orderClt.SetDecodeFunc(ths.decodeOrders)
 }
 
 func (ths *ReaderEx) initHistParams() {
-	ths.historyAddr = fmt.Sprintf("https://api.%s/trades.php?c=%s&mk_type=%s",
+	ths.HistoryAddr = fmt.Sprintf("https://api.%s/trades.php?c=%s&mk_type=%s",
 		ths.Address, ths.Coin, ths.Monetary)
 	ths.historyClt = new(rhttp.CHttp)
 	ths.historyClt.SetDecodeFunc(ths.decodeHistory)

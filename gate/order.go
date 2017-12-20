@@ -27,27 +27,11 @@ func (ths *Reader) reading() bool {
 	ths.Unlock()
 	defer ths.endReading()
 
-	address := fmt.Sprintf("https://%s/json_svr/query/?u=11&c=%d&type=ask_bid_list_table&symbol=%s_%s",
-		ths.Address, ths.r.Intn(65535), ths.Coin, ths.Monetary)
-	if ths.orderClt == nil {
-		ths.orderClt = new(rhttp.CHttp)
-		ths.orderClt.SetDecodeFunc(ths.decodeOrders)
-
-		if ths.Proxy.UseProxy() {
-			client, err := ths.orderClt.GetProxyClient(30, ths.Proxy.Address, ths.Proxy.Port)
-			if err != nil {
-				_L.Error("Gate : GetProxyClient has error \n%+v", err)
-				return false
-			}
-			ths.orderClt.SetClient(client)
-		} else {
-			ths.orderClt.SetClient(ths.orderClt.GetClient(30))
-		}
-	}
-
-	ret, err := ths.orderClt.ClientGet(address, rhttp.ReturnCustomType)
+	addr := fmt.Sprintf("%s%d", ths.OrderAddr, ths.r.Intn(65535))
+	ret, err := ths.orderClt.ClientGet(addr, rhttp.ReturnCustomType)
+	ths.Datas.ClearOrderBook()
+	ths.Datas.ClearHistorys()
 	if err == nil {
-		ths.Datas.ClearOrderBook()
 		rtdata := ret.(*ResultData)
 		ths.addAsksOrders(rtdata.AskList, nil)
 		ths.addBidsOrders(rtdata.BidList, nil)
@@ -56,8 +40,7 @@ func (ths *Reader) reading() bool {
 	}
 
 	_L.Error("Gate : Client get has error :\n%+v", err)
-	ths.orderClt = new(rhttp.CHttp)
-	ths.orderClt.SetDecodeFunc(ths.decodeOrders)
+	ths.initOrderParams()
 	return false
 }
 
@@ -65,7 +48,7 @@ func (ths *Reader) decodeOrders(b []byte) (interface{}, error) {
 	datas := new(ResultData)
 	err := json.Unmarshal(b, &datas)
 	if err != nil {
-		_L.Error("Bittrex : decodeOrders has error :\n%+v", err)
+		_L.Error("Gate : decodeOrders has error :\n%+v", err)
 	}
 	return datas, err
 }

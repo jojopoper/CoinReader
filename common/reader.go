@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+
+	"github.com/jojopoper/rhttp"
 )
 
 // ReadFunc : readout function define
@@ -30,6 +32,8 @@ type ReaderDef struct {
 	readOrders   ReadFunc
 	orderLock    *sync.Mutex
 	historyLock  *sync.Mutex
+	OrderAddr    string
+	HistoryAddr  string
 }
 
 // Init init parameters
@@ -169,4 +173,18 @@ func (ths *ReaderDef) PrintHistorys(length int) string {
 		}
 	}
 	return ret
+}
+
+// SetClient : set http client to rhttp
+func (ths *ReaderDef) SetClient(c *rhttp.CHttp) error {
+	if ths.Proxy.UseProxy() {
+		client, err := c.GetProxyClient(30, ths.Proxy.Address, ths.Proxy.Port)
+		if err != nil {
+			return err
+		}
+		c.SetClient(client)
+	} else {
+		c.SetClient(c.GetClient(30))
+	}
+	return nil
 }

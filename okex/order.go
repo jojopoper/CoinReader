@@ -2,7 +2,6 @@ package okex
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/jojopoper/CoinReader/common"
@@ -10,36 +9,18 @@ import (
 	_L "github.com/jojopoper/xlog"
 )
 
+// rdOrders : readout order datas from okex.com, datas saved in order datas
 func (ths *Reader) rdOrders() bool {
-	address := fmt.Sprintf("https://%s/api/%s/depth.do?symbol=%s_%s&size=%d",
-		ths.Address, ths.currentVer, ths.Coin, ths.Monetary, ths.OrderDepth)
-	if ths.orderClt == nil {
-		ths.orderClt = new(rhttp.CHttp)
-		ths.orderClt.SetDecodeFunc(ths.decodeOrders)
-
-		if ths.Proxy.UseProxy() {
-			client, err := ths.orderClt.GetProxyClient(30, ths.Proxy.Address, ths.Proxy.Port)
-			if err != nil {
-				_L.Error("Okex : GetProxyClient(order) has error \n%+v", err)
-				return false
-			}
-			ths.orderClt.SetClient(client)
-		} else {
-			ths.orderClt.SetClient(ths.orderClt.GetClient(30))
-		}
-	}
-
-	ret, err := ths.orderClt.ClientGet(address, rhttp.ReturnCustomType)
+	ret, err := ths.orderClt.ClientGet(ths.OrderAddr, rhttp.ReturnCustomType)
+	ths.Datas.ClearOrderBook()
 	if err == nil {
-		ths.Datas.ClearOrderBook()
 		ths.addAsksOrders(ret.(*OrderList), nil)
 		ths.addBidsOrders(ret.(*OrderList), nil)
 		return true
 	}
 
 	_L.Error("Okex : Client get(order) has error :\n%+v", err)
-	ths.orderClt = new(rhttp.CHttp)
-	ths.orderClt.SetDecodeFunc(ths.decodeOrders)
+	ths.initOrderParams()
 	return false
 }
 

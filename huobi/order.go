@@ -2,7 +2,6 @@ package huobi
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/jojopoper/CoinReader/common"
@@ -10,36 +9,18 @@ import (
 	_L "github.com/jojopoper/xlog"
 )
 
+// rdOrders : readout order datas from Huobi.pro, datas saved in order datas
 func (ths *Reader) rdOrders() bool {
-	address := fmt.Sprintf("https://api.%s/market/depth?symbol=%s%s&type=step0",
-		ths.Address, ths.Coin, ths.Monetary)
-	if ths.orderClt == nil {
-		ths.orderClt = new(rhttp.CHttp)
-		ths.orderClt.SetDecodeFunc(ths.decodeOrders)
-
-		if ths.Proxy.UseProxy() {
-			client, err := ths.orderClt.GetProxyClient(30, ths.Proxy.Address, ths.Proxy.Port)
-			if err != nil {
-				_L.Error("Huobi : GetProxyClient(order) has error \n%+v", err)
-				return false
-			}
-			ths.orderClt.SetClient(client)
-		} else {
-			ths.orderClt.SetClient(ths.orderClt.GetClient(30))
-		}
-	}
-
-	ret, err := ths.orderClt.ClientGet(address, rhttp.ReturnCustomType)
+	ret, err := ths.orderClt.ClientGet(ths.OrderAddr, rhttp.ReturnCustomType)
+	ths.Datas.ClearOrderBook()
 	if err == nil {
-		ths.Datas.ClearOrderBook()
 		ths.addAsksOrders(ret.(*OrderResult), nil)
 		ths.addBidsOrders(ret.(*OrderResult), nil)
 		return true
 	}
 
-	_L.Error("Huobi : Client get(order) has error :\n%+v", err)
-	ths.orderClt = new(rhttp.CHttp)
-	ths.orderClt.SetDecodeFunc(ths.decodeOrders)
+	_L.Error("Huobi.pro : Client get(order) has error :\n%+v", err)
+	ths.initOrderParams()
 	return false
 }
 

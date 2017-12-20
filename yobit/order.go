@@ -2,7 +2,6 @@ package yobit
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/jojopoper/CoinReader/common"
@@ -10,36 +9,18 @@ import (
 	_L "github.com/jojopoper/xlog"
 )
 
+// rdOrders : readout order datas from yobit.net, datas saved in order datas
 func (ths *Reader) rdOrders() bool {
-	address := fmt.Sprintf("https://%s/api/%s/depth/%s_%s?limit=%d",
-		ths.Address, ths.currentVer, ths.Coin, ths.Monetary, ths.depth)
-	if ths.orderClt == nil {
-		ths.orderClt = new(rhttp.CHttp)
-		ths.orderClt.SetDecodeFunc(ths.decodeOrders)
-
-		if ths.Proxy.UseProxy() {
-			client, err := ths.orderClt.GetProxyClient(30, ths.Proxy.Address, ths.Proxy.Port)
-			if err != nil {
-				_L.Error("Yobit : GetProxyClient(order) has error \n%+v", err)
-				return false
-			}
-			ths.orderClt.SetClient(client)
-		} else {
-			ths.orderClt.SetClient(ths.orderClt.GetClient(30))
-		}
-	}
-
-	ret, err := ths.orderClt.ClientGet(address, rhttp.ReturnCustomType)
+	ret, err := ths.orderClt.ClientGet(ths.OrderAddr, rhttp.ReturnCustomType)
+	ths.Datas.ClearOrderBook()
 	if err == nil {
-		ths.Datas.ClearOrderBook()
 		ths.addAsksOrders(ret.(*YOrderList), nil)
 		ths.addBidsOrders(ret.(*YOrderList), nil)
 		return true
 	}
 
 	_L.Error("Yobit : Client get(order) has error :\n%+v", err)
-	ths.orderClt = new(rhttp.CHttp)
-	ths.orderClt.SetDecodeFunc(ths.decodeOrders)
+	ths.initOrderParams()
 	return false
 }
 

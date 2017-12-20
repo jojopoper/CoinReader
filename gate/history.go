@@ -8,7 +8,6 @@ import (
 )
 
 func (ths *Reader) addHistorys(hs [][]string) {
-	ths.Datas.ClearHistorys()
 	for _, val := range hs {
 		ob := &common.History{}
 		ob.DateTime, _ = time.Parse("15:04:05", val[0])

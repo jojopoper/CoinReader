@@ -2,7 +2,6 @@ package poloniex
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"sync"
 
@@ -11,36 +10,18 @@ import (
 	_L "github.com/jojopoper/xlog"
 )
 
+// rdOrders : readout order datas from poloniex.com, datas saved in order datas
 func (ths *Reader) rdOrders() bool {
-	address := fmt.Sprintf("https://%s/public?command=returnOrderBook&depth=%d&currencyPair=%s_%s",
-		ths.Address, ths.OrderDepth, ths.Monetary, ths.Coin)
-	if ths.orderClt == nil {
-		ths.orderClt = new(rhttp.CHttp)
-		ths.orderClt.SetDecodeFunc(ths.decodeOrders)
-
-		if ths.Proxy.UseProxy() {
-			client, err := ths.orderClt.GetProxyClient(30, ths.Proxy.Address, ths.Proxy.Port)
-			if err != nil {
-				_L.Error("Poloniex : GetProxyClient(order) has error \n%+v", err)
-				return false
-			}
-			ths.orderClt.SetClient(client)
-		} else {
-			ths.orderClt.SetClient(ths.orderClt.GetClient(30))
-		}
-	}
-
-	ret, err := ths.orderClt.ClientGet(address, rhttp.ReturnCustomType)
+	ret, err := ths.orderClt.ClientGet(ths.OrderAddr, rhttp.ReturnCustomType)
+	ths.Datas.ClearOrderBook()
 	if err == nil {
-		ths.Datas.ClearOrderBook()
 		ths.addAsksOrders(ret.(*POrderList), nil)
 		ths.addBidsOrders(ret.(*POrderList), nil)
 		return true
 	}
 
 	_L.Error("Poloniex : Client get(order) has error :\n%+v", err)
-	ths.orderClt = new(rhttp.CHttp)
-	ths.orderClt.SetDecodeFunc(ths.decodeOrders)
+	ths.initOrderParams()
 	return false
 }
 

@@ -12,11 +12,9 @@ import (
 // Reader : aex reader define
 type Reader struct {
 	common.ReaderDef
-	orderClt    *rhttp.CHttp
-	historyClt  *rhttp.CHttp
-	currentVer  string
-	orderAddr   string
-	historyAddr string
+	orderClt   *rhttp.CHttp
+	historyClt *rhttp.CHttp
+	currentVer string
 }
 
 // Init init parameters
@@ -32,33 +30,26 @@ func (ths *Reader) baseInit() {
 	ths.Coin = strings.ToLower(ths.Coin)
 	ths.Address = "aex.com"
 	ths.currentVer = "Update time 2017-02-17"
+
+	ths.OrderAddr = fmt.Sprintf("https://api.%s/depth.php?c=%s&mk_type=%s",
+		ths.Address, ths.Coin, ths.Monetary)
+
+	ths.HistoryAddr = fmt.Sprintf("https://api.%s/trades.php?c=%s&mk_type=%s",
+		ths.Address, ths.Coin, ths.Monetary)
 }
 
 func (ths *Reader) initOrderParams() {
-	ths.orderAddr = fmt.Sprintf("https://api.%s/depth.php?c=%s&mk_type=%s",
-		ths.Address, ths.Coin, ths.Monetary)
 	ths.orderClt = new(rhttp.CHttp)
 	ths.orderClt.SetDecodeFunc(ths.decodeOrders)
-	ths.setClient(ths.orderClt)
+	if err := ths.SetClient(ths.orderClt); err != nil {
+		_L.Error("Aex : InitOrderParams set http client has error \n%+v", err)
+	}
 }
 
 func (ths *Reader) initHistParams() {
-	ths.historyAddr = fmt.Sprintf("https://api.%s/trades.php?c=%s&mk_type=%s",
-		ths.Address, ths.Coin, ths.Monetary)
 	ths.historyClt = new(rhttp.CHttp)
 	ths.historyClt.SetDecodeFunc(ths.decodeHistory)
-	ths.setClient(ths.historyClt)
-}
-
-func (ths *Reader) setClient(c *rhttp.CHttp) {
-	if ths.Proxy.UseProxy() {
-		client, err := c.GetProxyClient(30, ths.Proxy.Address, ths.Proxy.Port)
-		if err != nil {
-			_L.Error("Aex : GetProxyClient(history) has error \n%+v", err)
-			return
-		}
-		c.SetClient(client)
-	} else {
-		c.SetClient(c.GetClient(30))
+	if err := ths.SetClient(ths.historyClt); err != nil {
+		_L.Error("Aex : initHistParams set http client has error \n%+v", err)
 	}
 }

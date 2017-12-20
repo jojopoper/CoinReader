@@ -2,7 +2,6 @@ package bitfinex
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"sync"
 
@@ -11,36 +10,18 @@ import (
 	_L "github.com/jojopoper/xlog"
 )
 
+// rdOrders : readout order datas from bitfinex.com, datas saved in order datas
 func (ths *Reader) rdOrders() bool {
-	address := fmt.Sprintf("https://api.%s/%s/book/%s%s?limit_bid=%d&limit_asks=%d",
-		ths.Address, ths.currentVer, ths.Coin, ths.Monetary, ths.limit, ths.limit)
-	if ths.orderClt == nil {
-		ths.orderClt = new(rhttp.CHttp)
-		ths.orderClt.SetDecodeFunc(ths.decodeOrders)
-
-		if ths.Proxy.UseProxy() {
-			client, err := ths.orderClt.GetProxyClient(30, ths.Proxy.Address, ths.Proxy.Port)
-			if err != nil {
-				_L.Error("Bitfinex : GetProxyClient(order) has error \n%+v", err)
-				return false
-			}
-			ths.orderClt.SetClient(client)
-		} else {
-			ths.orderClt.SetClient(ths.orderClt.GetClient(30))
-		}
-	}
-
-	ret, err := ths.orderClt.ClientGet(address, rhttp.ReturnCustomType)
+	ret, err := ths.orderClt.ClientGet(ths.OrderAddr, rhttp.ReturnCustomType)
+	ths.Datas.ClearOrderBook()
 	if err == nil {
-		ths.Datas.ClearOrderBook()
 		ths.addAsksOrders(ret.(*OrderList), nil)
 		ths.addBidsOrders(ret.(*OrderList), nil)
 		return true
 	}
 
 	_L.Error("Bitfinex : Client get(order) has error :\n%+v", err)
-	ths.orderClt = new(rhttp.CHttp)
-	ths.orderClt.SetDecodeFunc(ths.decodeOrders)
+	ths.initOrderParams()
 	return false
 }
 

@@ -11,15 +11,15 @@ import (
 
 // rdHistory : readout histroy datas from aex.com, datas saved in History datas
 func (ths *Reader) rdHistory() bool {
-	ret, err := ths.historyClt.ClientGet(ths.historyAddr, rhttp.ReturnCustomType)
+	ret, err := ths.historyClt.ClientGet(ths.HistoryAddr, rhttp.ReturnCustomType)
+	ths.Datas.ClearHistorys()
 	if err == nil {
 		ths.addHistorys(ret.([]*HistoryItem))
 		return true
 	}
 
 	_L.Error("Aex : Client get(history) has error :\n%+v", err)
-	ths.historyClt = new(rhttp.CHttp)
-	ths.historyClt.SetDecodeFunc(ths.decodeHistory)
+	ths.initHistParams()
 	return false
 }
 
@@ -33,7 +33,6 @@ func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
 }
 
 func (ths *Reader) addHistorys(hs []*HistoryItem) {
-	ths.Datas.ClearHistorys()
 	for _, val := range hs {
 		ob := &common.History{}
 		ob.DateTime = time.Unix(val.Date, 0)

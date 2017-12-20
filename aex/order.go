@@ -9,18 +9,18 @@ import (
 	_L "github.com/jojopoper/xlog"
 )
 
+// rdOrders : readout order datas from aex.com, datas saved in order datas
 func (ths *Reader) rdOrders() bool {
-	ret, err := ths.orderClt.ClientGet(ths.orderAddr, rhttp.ReturnCustomType)
+	ret, err := ths.orderClt.ClientGet(ths.OrderAddr, rhttp.ReturnCustomType)
+	ths.Datas.ClearOrderBook()
 	if err == nil {
-		ths.Datas.ClearOrderBook()
 		ths.addSellOrders(ret.(*OrderList), nil)
 		ths.addBuyOrders(ret.(*OrderList), nil)
 		return true
 	}
 
 	_L.Error("Aex : Client get(order) has error :\n%+v", err)
-	ths.orderClt = new(rhttp.CHttp)
-	ths.orderClt.SetDecodeFunc(ths.decodeOrders)
+	ths.initOrderParams()
 	return false
 }
 
