@@ -12,5 +12,6 @@ okex.com
 huobi.pro
 bitfinex.com
 coinw.com
+bcex.ca
 以后再需要的交易所再陆续添加
 ```
