@@ -76,6 +76,8 @@ func (ths *TradeOrder) submitOrder(o trade.IOrderInfo, p, a float64) *trade.Orde
 		ths.Result.IsSuccess = rets[0] == "succ"
 		if ths.Result.IsSuccess && len(rets) == 2 {
 			ths.Result.ID = rets[1]
+		} else {
+			ths.Result.ID = ""
 		}
 		ths.Result.Reason = tmp
 	} else {
@@ -83,6 +85,7 @@ func (ths *TradeOrder) submitOrder(o trade.IOrderInfo, p, a float64) *trade.Orde
 		ths.initSubmitParams()
 		ths.Result.IsSuccess = false
 		ths.Result.Reason = "Net error"
+		ths.Result.ID = ""
 	}
 
 	return ths.Result

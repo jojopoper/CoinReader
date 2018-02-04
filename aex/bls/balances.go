@@ -80,10 +80,10 @@ func (ths *Balances) getLockBalance(c string) float64 {
 }
 
 func (ths *Balances) decodeBalances(b []byte) (interface{}, error) {
-	// _L.Trace("%s", string(b))
 	bals := make(map[string]string)
 	err := json.Unmarshal(b, &bals)
 	if err != nil {
+		_L.Trace("%s", string(b))
 		_L.Error("Aex : decodeBalances has error :\n%+v", err)
 		return nil, err
 	}

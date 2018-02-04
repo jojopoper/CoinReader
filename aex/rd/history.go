@@ -27,6 +27,7 @@ func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
 	historys := make([]*HistoryItem, 0)
 	err := json.Unmarshal(b, &historys)
 	if err != nil {
+		_L.Trace("Aex : decodeHistory orgdata [ %s ]",string(b))
 		_L.Error("Aex : decodeHistory has error :\n%+v", err)
 	}
 	return historys, err

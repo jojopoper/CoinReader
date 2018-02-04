@@ -29,6 +29,7 @@ func (ths *Reader) decodeOrders(b []byte) (interface{}, error) {
 	orders := new(OrderList)
 	err := json.Unmarshal(b, orders)
 	if err != nil {
+		_L.Trace("Aex : decodeOrders orgdata [ %s ]",string(b))
 		_L.Error("Aex : decodeOrders has error :\n%+v", err)
 	}
 	return orders, err

@@ -116,7 +116,7 @@ func thd3() {
 	rd3.Init(bitCny, btc, rd1.GetClientCycle())
 	wt := new(sync.WaitGroup)
 	var ts1, ts2 int64
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100000; i++ {
 		ts1 = time.Now().UnixNano()
 		// _L.Debug("[%d] Begin reading .... [%d]", i, ts1)
 		wt.Add(3)

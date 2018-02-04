@@ -23,7 +23,7 @@ type AexUserInfo struct {
 // Init : init struct information
 func (ths *AexUserInfo) Init(info *common.BaseUserInfo) {
 	ths.info = info
-	ths.CheckBase.Init(60)
+	ths.CheckBase.Init(5000)
 	ths.SetExeFunc(ths.execute)
 	ths.execute()
 	ths.Start()
