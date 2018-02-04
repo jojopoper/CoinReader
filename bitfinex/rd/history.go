@@ -29,6 +29,7 @@ func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, &historys)
 	if err != nil {
 		_L.Error("Bitfinex : decodeHistory has error :\n%+v", err)
+		_L.Trace("Bitfinex : decodeHistory orgdata [ %s ]", string(b))
 	}
 	return historys, err
 }
