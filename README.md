@@ -3,6 +3,7 @@
 支持 
 Poloniex.com 
 Bittrex.com 
+Bitfinex.com
 Yobit.cn 
 gate.io
 aex.com
