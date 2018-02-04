@@ -28,6 +28,7 @@ func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, &historys)
 	if err != nil {
 		_L.Error("Okex : decodeHistory has error :\n%+v", err)
+		_L.Trace("Okex : decodeHistory orgdata [ %s ]", string(b))
 	}
 	ths.R(historys)
 	return historys, err

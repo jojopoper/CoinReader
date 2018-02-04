@@ -29,6 +29,7 @@ func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, &tmp)
 	if err != nil {
 		_L.Error("Yobit : decodeHistory (0) has error :\n%+v", err)
+		_L.Trace("Yobit : decodeHistory (0) orgdata [ %s ]", string(b))
 	}
 	for _, val := range tmp {
 		bys, err := json.Marshal(val)
@@ -38,6 +39,7 @@ func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
 			err = json.Unmarshal(bys, &historys)
 			if err != nil {
 				_L.Error("Yobit : decodeHistory (2) has error :\n%+v", err)
+				_L.Trace("Yobit : decodeHistory (2) orgdata [ %s ]", string(b))
 			}
 		}
 	}

@@ -29,6 +29,7 @@ func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, &historys)
 	if err != nil {
 		_L.Error("Poloniex : decodeHistory has error :\n%+v", err)
+		_L.Trace("Poloniex : decodeHistory orgdata [ %s ]", string(b))
 	}
 	return historys, err
 }

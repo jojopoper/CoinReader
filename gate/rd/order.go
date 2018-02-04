@@ -49,6 +49,7 @@ func (ths *Reader) decodeOrders(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, &datas)
 	if err != nil {
 		_L.Error("Gate : decodeOrders has error :\n%+v", err)
+		_L.Trace("Gate : decodeOrders orgdata [ %s ]", string(b))
 	}
 	return datas, err
 }

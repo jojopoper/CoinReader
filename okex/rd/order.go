@@ -29,6 +29,7 @@ func (ths *Reader) decodeOrders(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, orders)
 	if err != nil {
 		_L.Error("Okex : decodeOrders has error :\n%+v", err)
+		_L.Trace("Okex : decodeOrders orgdata [ %s ]", string(b))
 	}
 	ths.R(orders.Asks)
 	return orders, err

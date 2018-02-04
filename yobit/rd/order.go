@@ -30,6 +30,7 @@ func (ths *Reader) decodeOrders(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, &tmp)
 	if err != nil {
 		_L.Error("Yobit : decodeOrders (0) has error :\n%+v", err)
+		_L.Trace("Yobit : decodeOrders (0) orgdata [ %s ]", string(b))
 	}
 	for _, val := range tmp {
 		bys, err := json.Marshal(val)
@@ -39,6 +40,7 @@ func (ths *Reader) decodeOrders(b []byte) (interface{}, error) {
 			err = json.Unmarshal(bys, &orders)
 			if err != nil {
 				_L.Error("Yobit : decodeOrders (2) has error :\n%+v", err)
+				_L.Trace("Yobit : decodeOrders (2) orgdata [ %s ]", string(b))
 			}
 		}
 	}

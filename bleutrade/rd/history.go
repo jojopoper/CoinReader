@@ -30,6 +30,7 @@ func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, &historys)
 	if err != nil {
 		_L.Error("BleuTrade : decodeHistory (0) has error :\n%+v", err)
+		_L.Trace("BleuTrade : decodeHistory orgdata [ %s ]", string(b))
 	}
 	return historys, err
 }

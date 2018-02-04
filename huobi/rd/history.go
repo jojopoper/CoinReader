@@ -28,6 +28,7 @@ func (ths *Reader) decodeHistory(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, &historys)
 	if err != nil {
 		_L.Error("Huobi : decodeHistory has error :\n%+v", err)
+		_L.Trace("Huobi : decodeHistory orgdata [ %s ]", string(b))
 	}
 	return historys, err
 }

@@ -30,6 +30,7 @@ func (ths *Reader) decodeOrders(b []byte) (interface{}, error) {
 	err := json.Unmarshal(b, orders)
 	if err != nil {
 		_L.Error("Poloniex : decodeOrders has error :\n%+v", err)
+		_L.Trace("Poloniex : decodeOrders orgdata [ %s ]", string(b))
 	}
 	return orders, err
 }
