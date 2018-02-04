@@ -22,6 +22,17 @@ func (ths *OrderElement) PrintString() string {
 	return ret
 }
 
+// Set : set value
+func (ths *OrderElement) Set(l string, fee float64) {
+	ths.Label = l
+	ths.Fee = fee
+}
+
+// UpdateOrder : update order value
+func (ths *OrderElement) UpdateOrder(o *rd.OrderBook) {
+	ths.OrderBook = *o
+}
+
 // GainResult : gain result define
 type GainResult struct {
 	Span    float64
@@ -41,7 +52,13 @@ func (ths *GainResult) PrintString() string {
 	ret += ths.To.PrintString() + "\n"
 	ret += fmt.Sprintf("> Agent(%s) Order (Fee = %.3f%%)\n", ths.Agent.Label, ths.Agent.Fee*100.0)
 	ret += ths.Agent.PrintString() + "\n"
-	ret += fmt.Sprintf("> Span    = %.8f\n", ths.Span)
+	ret += ths.PrintProfit()
+	return ret
+}
+
+// PrintProfit : print profit infor to string
+func (ths *GainResult) PrintProfit() string {
+	ret := fmt.Sprintf("> Span    = %.8f\n", ths.Span)
 	ret += fmt.Sprintf("> Get     = %.8f\n", ths.Get)
 	ret += fmt.Sprintf("> * Percent = %.8f%% *\n", ths.Percent)
 	ret += fmt.Sprintf("> * Profit  = %.8f *\n", ths.Profit)
@@ -79,7 +96,7 @@ func (ths *Profits3Element) reset(f, t, a *OrderElement) *Profits3Element {
 // From a "digital currency" (using the "basic currency") to buy the money through
 // the "exchange of money" to calculate the gain of the basic currency.
 // For example, buy eth from BTC, sell eth to CNY, and then buy BTC with CNY.
-func (ths *Profits3Element) DcEcBcGain(f, t, a *OrderElement) *GainResult {
+func (ths *Profits3Element) DcEcBcGain(f, t, a *OrderElement, curBtc, curCny, curCoin float64) *GainResult {
 	ths.Lock()
 	defer ths.Unlock()
 	ths.reset(f, t, a)
@@ -87,54 +104,68 @@ func (ths *Profits3Element) DcEcBcGain(f, t, a *OrderElement) *GainResult {
 	ret := &GainResult{}
 	// 第一步计算Dc挂单
 	// 1.1 先得到Dc与Ec量的最小值 - 因为买入当前Dc后需要到Ec去卖出，所以需要计算最小能在Dc买入多少量
-	minAmount := math.Min(ths.from.Amount, ths.to.Amount/(1.0-ths.from.Fee))
+	minAmount := math.Min(math.Min(ths.from.Amount, ths.to.Amount/(1.0-ths.from.Fee)), curCoin/(1.0-ths.from.Fee))
 	// 1.2 计算需要花销多少Bc
 	span := minAmount * ths.from.Price
-	// 1.3 计算获得Dc的挂单数据
+	// 1.3 计算花销BTC是否超过余额
+	minSpan := math.Min(span, curBtc)
+	if span > minSpan {
+		minAmount = minSpan / ths.from.Price
+	}
+	// 1.4 计算获得Dc的挂单数据
 	ret.From = &OrderElement{
 		OrderBook: rd.OrderBook{
 			Price:  ths.from.Price,
 			Amount: minAmount,
-			Total:  span,
+			Total:  minSpan,
 		},
 		Label: ths.from.Label,
 		Fee:   f.Fee,
 	}
-	// 1.4 计算实际获得多少Dc（因为有交易手续费）
+	// 1.5 计算实际获得多少Dc（因为有交易手续费）
 	getDcRealAmount := minAmount * (1.0 - ths.from.Fee)
 	// 第二步 计算Ec挂单
 	// 2.1 计算获得的Dc能拿到多少Ec（含交易手续费之后的值）
 	getEcTotal := getDcRealAmount * ths.to.Price
-	// 2.2 计算Ec总量是否超出Bc实际挂单总量
-	if getEcTotal > ths.agent.Total {
-		getEcTotal = ths.agent.Total
-		getDcRealAmount = getEcTotal / ths.to.Price
+	// 2.2 计算实际获得钱数是否超过余额
+	minGetEcTotal := math.Min(getEcTotal, curCny/(1.0-ths.to.Fee))
+	if getEcTotal > minGetEcTotal {
+		getDcRealAmount = minGetEcTotal / ths.to.Price
 		minAmount = getDcRealAmount / (1.0 - ths.from.Fee)
-		span = minAmount * ths.from.Price
+		minSpan = minAmount * ths.from.Price
 		ret.From.Amount = minAmount
-		ret.From.Total = span
+		ret.From.Total = minSpan
 	}
-	// 2.3 得到Ec挂单数据
+	// 2.3 计算Ec总量是否超出Bc实际挂单总量
+	if minGetEcTotal > ths.agent.Total {
+		minGetEcTotal = ths.agent.Total
+		getDcRealAmount = minGetEcTotal / ths.to.Price
+		minAmount = getDcRealAmount / (1.0 - ths.from.Fee)
+		minSpan = minAmount * ths.from.Price
+		ret.From.Amount = minAmount
+		ret.From.Total = minSpan
+	}
+	// 2.4 得到Ec挂单数据
 	ret.To = &OrderElement{
 		OrderBook: rd.OrderBook{
 			Price:  ths.to.Price,
 			Amount: getDcRealAmount,
-			Total:  getEcTotal,
+			Total:  minGetEcTotal,
 		},
 		Label: ths.to.Label,
 		Fee:   ths.to.Fee,
 	}
-	// 2.4 计算实际获得Ec总量(除去手续费之后的总量)
-	getEcRealTotal := getEcTotal * (1.0 - ths.to.Fee)
+	// 2.5 计算实际获得Ec总量(除去手续费之后的总量)
+	getEcRealTotal := minGetEcTotal * (1.0 - ths.to.Fee)
 	// 第三步计算Bc挂单
 	// 3.1 计算能够获得多少Bc（含交易手续费之后的值）
 	result := getEcRealTotal / ths.agent.Price
 	// 3.2 计算实际到手的Bc结果
 	realResult := result * (1.0 - ths.agent.Fee)
 	// 3.3 计算第二步花销Bc和最终获取Bc的差值
-	profit := realResult - span
+	profit := realResult - minSpan
 	// 3.3 以第二步花销为基础计算盈亏比例
-	percent := profit / span * 100.0
+	percent := profit / minSpan * 100.0
 	// 3.4 计算Bc挂单数据
 	ret.Agent = &OrderElement{
 		OrderBook: rd.OrderBook{
@@ -145,7 +176,7 @@ func (ths *Profits3Element) DcEcBcGain(f, t, a *OrderElement) *GainResult {
 		Label: ths.agent.Label,
 		Fee:   ths.agent.Fee,
 	}
-	ret.Span = span
+	ret.Span = minSpan
 	ret.Get = realResult
 	ret.Percent = percent
 	ret.Profit = profit
@@ -156,7 +187,7 @@ func (ths *Profits3Element) DcEcBcGain(f, t, a *OrderElement) *GainResult {
 // From a "digital currency" (using the "basic currency") to buy the money through
 // the "exchange of money" to calculate the gain of the basic currency.
 // For example, sell BTC to CNY, buy bts from cny, sell bts to BTC.
-func (ths *Profits3Element) BcEcDcGain(f, t, a *OrderElement) *GainResult {
+func (ths *Profits3Element) BcEcDcGain(f, t, a *OrderElement, curBtc, curCny, curCoin float64) *GainResult {
 	ths.Lock()
 	defer ths.Unlock()
 	ths.reset(f, t, a)
@@ -164,10 +195,15 @@ func (ths *Profits3Element) BcEcDcGain(f, t, a *OrderElement) *GainResult {
 	ret := &GainResult{}
 	// 第一步 计算Bc挂单
 	// 1.1 先得到Bc与Ec总量的最小值 - 因为卖出当前Bc后需要到Ec去买入，所以需要计算最小能在Bc买入多少量
-	minTotal := math.Min(ths.from.Total, ths.to.Total/(1.0-ths.from.Fee))
-	// 1.2 计算最小的挂单量
-	minAmount := minTotal / ths.from.Price
-	// 1.3 计算获得Bc的挂单数据
+	minTotal := math.Min(math.Min(ths.from.Total, ths.to.Total/(1.0-ths.from.Fee)), curCny/(1.0-ths.from.Fee))
+	// 1.2 计算挂单量
+	bcAmount := minTotal / ths.from.Price
+	// 1.3 计算花销BTC是否超过余额
+	minAmount := math.Min(bcAmount, curBtc)
+	if bcAmount > minAmount {
+		minTotal = minAmount * ths.from.Price
+	}
+	// 1.4 计算获得Bc的挂单数据
 	ret.From = &OrderElement{
 		OrderBook: rd.OrderBook{
 			Price:  ths.from.Price,
@@ -177,32 +213,41 @@ func (ths *Profits3Element) BcEcDcGain(f, t, a *OrderElement) *GainResult {
 		Label: ths.from.Label,
 		Fee:   f.Fee,
 	}
-	// 1.4 计算实际获得多少Bc（因为有交易手续费）
+	// 1.5 计算实际获得多少Bc（因为有交易手续费）
 	getRealTotal := minTotal * (1.0 - ths.from.Fee)
 	// 第二步 计算Ec挂单
 	// 2.1 计算获得的Bc能拿到多少Ec（未刨除交易手续费之后的值）
 	getEcAmount := getRealTotal / ths.to.Price
-	// 2.2 计算Ec总量是否超出Dc实际挂单总量
-	if getEcAmount > ths.agent.Amount {
-		getEcAmount = ths.agent.Amount
-		getRealTotal = getEcAmount * ths.to.Price
+	// 2.2 计算数字币数量是否超过余额
+	minGetEcAmount := math.Min(getEcAmount, curCoin)
+	if getEcAmount > minGetEcAmount {
+		getRealTotal = minGetEcAmount * ths.to.Price
 		minTotal = getRealTotal / (1.0 - ths.from.Fee)
 		minAmount = minTotal / ths.from.Price
 		ret.From.Amount = minAmount
 		ret.From.Total = minTotal
 	}
-	// 2.3 得到Ec挂单数据
+	// 2.3 计算Ec总量是否超出Dc实际挂单总量
+	if minGetEcAmount > ths.agent.Amount {
+		minGetEcAmount = ths.agent.Amount
+		getRealTotal = minGetEcAmount * ths.to.Price
+		minTotal = getRealTotal / (1.0 - ths.from.Fee)
+		minAmount = minTotal / ths.from.Price
+		ret.From.Amount = minAmount
+		ret.From.Total = minTotal
+	}
+	// 2.4 得到Ec挂单数据
 	ret.To = &OrderElement{
 		OrderBook: rd.OrderBook{
 			Price:  ths.to.Price,
-			Amount: getEcAmount,
+			Amount: minGetEcAmount,
 			Total:  getRealTotal,
 		},
 		Label: ths.to.Label,
 		Fee:   ths.to.Fee,
 	}
-	// 2.4 计算获得的实际的Ec数量
-	getEcRealAmount := getEcAmount * (1.0 - ths.to.Fee)
+	// 2.5 计算获得的实际的Ec数量
+	getEcRealAmount := minGetEcAmount * (1.0 - ths.to.Fee)
 	// 第三步 计算Dc挂单
 	// 3.1 计算能够获得多少Bc（含交易手续费之后的值）
 	result := getEcRealAmount * ths.agent.Price
