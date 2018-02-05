@@ -7,7 +7,7 @@ import (
 	_L "github.com/jojopoper/xlog"
 )
 
-// ReaderEx : aex reader define
+// ReaderEx : coinegg reader define
 type ReaderEx struct {
 	Reader
 	cltCle    *nt.ClientCycle
