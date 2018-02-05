@@ -14,5 +14,6 @@ bitfinex.com
 coinw.com
 bcex.ca
 coinegg.com
+allcoin.com
 以后再需要的交易所再陆续添加
 ```
