@@ -11,7 +11,7 @@ import (
 	_L "github.com/jojopoper/xlog"
 )
 
-// Reader : aex reader define
+// Reader : coinegg reader define
 type Reader struct {
 	rd.ReaderDef
 	tool.ReverseSlice
