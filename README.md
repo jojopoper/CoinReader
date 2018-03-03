@@ -16,5 +16,6 @@ bcex.ca
 coinegg.com
 allcoin.com
 bite.ceo(非官方API接口)
+binance.com
 以后再需要的交易所再陆续添加
 ```
