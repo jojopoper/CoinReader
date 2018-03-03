@@ -1,4 +1,4 @@
-# Go bittrex datas reader
+# Go Binance.com datas reader
 
 *Description: This library for readout history trade datas and orders from https://www.binance.ceo
 
