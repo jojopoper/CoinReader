@@ -1,4 +1,4 @@
-# Go poloniex datas reader
+# Go Gate.io datas reader
 
 *Description: This library for readout history trade datas and orders from https://gate.io
 
