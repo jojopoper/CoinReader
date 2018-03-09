@@ -2,8 +2,6 @@ package rd
 
 import (
 	"encoding/json"
-	"fmt"
-	"strconv"
 	"sync"
 
 	"github.com/jojopoper/CoinReader/common/rd"
@@ -11,69 +9,52 @@ import (
 	_L "github.com/jojopoper/xlog"
 )
 
-func (ths *Reader) endReading() {
-	ths.Lock()
-	defer ths.Unlock()
-	ths.isReading = false
-}
-
-func (ths *Reader) reading() bool {
-	ths.Lock()
-	if ths.isReading {
-		defer ths.Unlock()
-		return true
-	}
-	ths.isReading = true
-	ths.Unlock()
-	defer ths.endReading()
-
-	addr := fmt.Sprintf("%s%d", ths.OrderAddr, ths.r.Intn(65535))
-	ret, err := ths.orderClt.ClientGet(addr, rhttp.ReturnCustomType)
+// rdOrders : readout order datas from gate.io, datas saved in order datas
+func (ths *Reader) rdOrders() bool {
+	ret, err := ths.orderClt.ClientGet(ths.OrderAddr, rhttp.ReturnCustomType)
 	ths.Datas.ClearOrderBook()
-	ths.Datas.ClearHistorys()
 	if err == nil {
-		rtdata := ret.(*ResultData)
-		ths.addAsksOrders(rtdata.AskList, nil)
-		ths.addBidsOrders(rtdata.BidList, nil)
-		ths.addHistorys(rtdata.TradeList)
+		ths.addAsksOrders(ret.(*OrderList), nil)
+		ths.addBidsOrders(ret.(*OrderList), nil)
 		return true
 	}
 
-	_L.Error("Gate : Client get has error :\n%+v", err)
+	_L.Error("Gate : Client get(order) has error :\n%+v", err)
 	ths.initOrderParams()
 	return false
 }
 
 func (ths *Reader) decodeOrders(b []byte) (interface{}, error) {
-	datas := new(ResultData)
-	err := json.Unmarshal(b, &datas)
+	orders := new(OrderList)
+	err := json.Unmarshal(b, &orders)
 	if err != nil {
 		_L.Error("Gate : decodeOrders has error :\n%+v", err)
 		_L.Trace("Gate : decodeOrders orgdata [ %s ]", string(b))
 	}
-	return datas, err
+	return orders, err
 }
 
-func (ths *Reader) addAsksOrders(os [][]string, w *sync.WaitGroup) {
+func (ths *Reader) addAsksOrders(os *OrderList, w *sync.WaitGroup) {
 	if w != nil {
 		defer w.Done()
 	}
-	for _, val := range os {
+	ths.R(os.Asks)
+	for _, val := range os.Asks {
 		itm := &rd.OrderBook{}
-		itm.Price, _ = strconv.ParseFloat(val[0], 64)
-		itm.Amount, _ = strconv.ParseFloat(val[1], 64)
+		itm.Price = val[0]
+		itm.Amount = val[1]
 		ths.Datas.AddOrder(rd.OrderSellStringKey, itm.Calc())
 	}
 }
 
-func (ths *Reader) addBidsOrders(os [][]string, w *sync.WaitGroup) {
+func (ths *Reader) addBidsOrders(os *OrderList, w *sync.WaitGroup) {
 	if w != nil {
 		defer w.Done()
 	}
-	for _, val := range os {
+	for _, val := range os.Bids {
 		itm := &rd.OrderBook{}
-		itm.Price, _ = strconv.ParseFloat(val[0], 64)
-		itm.Amount, _ = strconv.ParseFloat(val[1], 64)
+		itm.Price = val[0]
+		itm.Amount = val[1]
 		ths.Datas.AddOrder(rd.OrderBuyStringKey, itm.Calc())
 	}
 }

@@ -18,7 +18,7 @@ func main() {
 	btg.Set("btg", 8, 0.01)
 
 	rd := _g.Reader{}
-	rd.Init(btc, btg, "127.0.0.1", "18181")
+	rd.Init(btc, btg, "127.0.0.1", "8801")
 	// rd.Init(btc, btg)
 	if rd.ReadAll() {
 		ordstr := rd.PrintOrders(20)

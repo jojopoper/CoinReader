@@ -1,13 +1,26 @@
 package rd
 
-// ResultData : gate.io result datas define
-type ResultData struct {
-	Result      bool        `json:"result"`
-	AskRate0    float64     `json:"ask_rate0"`
-	BidRate0    float64     `json:"bid_rate0"`
-	MarketRates bool        `json:"market_rates"`
-	RecentRates interface{} `json:"recent_rates"`
-	AskList     [][]string  `json:"ask_list"`
-	BidList     [][]string  `json:"bid_list"`
-	TradeList   [][]string  `json:"trade_list"`
+// HistoryItem : history data item define
+type HistoryItem struct {
+	TradeID   string  `json:"tradeID"`
+	DateTime  string  `json:"date"`
+	Timestamp string  `json:"timestamp"`
+	Type      string  `json:"type"`
+	Rate      float64 `json:"rate"`
+	Amount    float64 `json:"amount"`
+	Total     float64 `json:"total"`
+}
+
+// HistoryData : history data define
+type HistoryData struct {
+	Result  string         `json:"result"`
+	Elapsed string         `json:"elapsed"`
+	Datas   []*HistoryItem `json:"data"`
+}
+
+// OrderList : order book datas
+type OrderList struct {
+	Result string      `json:"result"`
+	Asks   [][]float64 `json:"asks"`
+	Bids   [][]float64 `json:"bids"`
 }
