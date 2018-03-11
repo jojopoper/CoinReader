@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	_r "github.com/jojopoper/CoinReader/cex/rd"
+	_r "github.com/jojopoper/CoinReader/cex.io/rd"
 	"github.com/jojopoper/CoinReader/common/cap"
 	_L "github.com/jojopoper/xlog"
 )
