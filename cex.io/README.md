@@ -6,7 +6,7 @@
 
 
 ```shell
-go get -u github.com/jojopoper/CoinReader/cex/...
+go get -u github.com/jojopoper/CoinReader/cex.io/...
 ```
 
 ## Usage
