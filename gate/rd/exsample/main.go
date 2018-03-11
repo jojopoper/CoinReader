@@ -14,12 +14,12 @@ func main() {
 
 	btc := &cap.CoinCapacity{}
 	btc.Set("btc", 8, 0.01)
-	btg := &cap.CoinCapacity{}
-	btg.Set("btg", 8, 0.01)
+	coin := &cap.CoinCapacity{}
+	coin.Set("doge", 8, 0.01)
 
 	rd := _g.Reader{}
-	rd.Init(btc, btg, "127.0.0.1", "8801")
-	// rd.Init(btc, btg)
+	rd.Init(btc, coin, "127.0.0.1", "8801")
+	// rd.Init(btc, coin)
 	if rd.ReadAll() {
 		ordstr := rd.PrintOrders(20)
 		hisstr := rd.PrintHistorys(20)

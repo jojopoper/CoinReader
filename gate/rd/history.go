@@ -2,6 +2,7 @@ package rd
 
 import (
 	"encoding/json"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -43,7 +44,11 @@ func (ths *Reader) addHistorys(hs *HistoryData) {
 			ob.DateTime = time.Unix(ts, 0)
 			ob.Type = val.Type
 			ob.Amount = val.Amount
-			ob.Price = val.Rate
+			if reflect.TypeOf(val.Rate).Kind() == reflect.String {
+				ob.Price, _ = strconv.ParseFloat(val.Rate.(string), 64)
+			} else {
+				ob.Price = val.Rate.(float64)
+			}
 			ob.Total = val.Total
 			ths.Datas.AddHistory(ob)
 		}
